@@ -1,21 +1,7 @@
-# ew
-
-[![Current Version](https://img.shields.io/crates/v/ew.svg)](https://crates.io/crates/ew)
-[![Documentation](https://docs.rs/ew/badge.svg)](https://docs.rs/ew)
-[![License](https://img.shields.io/crates/l/ew.svg)](https://crates.io/crates/ew)
-
-Optimization algorithms implemented in Rust
-
-For now ew provides genetic algorithm and partcile swarm algorithm.
-
-
-## Example of optimization
-
-```rust
-//! Example of optimizing the Schwefel function with genetic algorithm.
+//! Example of optimizing the Rosenbrock function.
 //!
 //! y = f(x), where x = (x0, x1, ..., xi,... xn).
-//! Global minimum is x' = (420.9687, 420.9687, ...) for any xi lying in [-500.0; 500.0].
+//! Global minimum is x' = (1.0, 1.0, ...) for any xi.
 //! f(x') = 0
 //!
 //! # Terms
@@ -42,20 +28,20 @@ type Chromosomes = Vec<Gene>;
 fn main() {
     // General parameters
 
-    // Search space. Any xi lies in [-500.0; 500.0]
-    let minval: Gene = -500.0;
-    let maxval: Gene = 500.0;
+    // Search space
+    let minval: Gene = -2.0_f32;
+    let maxval: Gene = 2.0_f32;
 
     // Count individuals in initial population
-    let population_size = 500;
+    let population_size = 600;
 
     // Count of xi in the chromosomes
-    let chromo_count = 15;
+    let chromo_count = 3;
 
     let intervals = vec![(minval, maxval); chromo_count];
 
     // Make a trait object for goal function (Schwefel function)
-    let goal = GoalFromFunction::new(ew_testfunc::schwefel);
+    let goal = GoalFromFunction::new(ew_testfunc::rosenbrock);
 
     // Make the creator to create initial population.
     // RandomCreator will fill initial population with individuals with random chromosomes in a
@@ -80,7 +66,7 @@ fn main() {
 
     // Make a Mutation trait object.
     // Use bitwise mutation (change random bits with given probability).
-    let mutation_probability = 15.0;
+    let mutation_probability = 85.0;
     let mutation_gene_count = 3;
     let single_mutation = mutation::BitwiseMutation::new(mutation_gene_count);
     let mutation = mutation::VecMutation::new(mutation_probability, Box::new(single_mutation));
@@ -91,11 +77,20 @@ fn main() {
     )];
 
     // Stop checker. Stop criterion for genetic algorithm.
+    let change_max_iterations = 3000;
+    let change_delta = 1e-9;
+    // let stop_checker = stopchecker::GoalNotChange::new(change_max_iterations, change_delta);
+    // let stop_checker = stopchecker::MaxIterations::new(500);
+
     // Stop algorithm if the value of goal function will become less of 1e-4 or
     // after 3000 generations (iterations).
     let stop_checker = stopchecker::CompositeAny::new(vec![
-        Box::new(stopchecker::Threshold::new(1e-4)),
-        Box::new(stopchecker::MaxIterations::new(3000)),
+        // Box::new(stopchecker::Threshold::new(1e-6)),
+        Box::new(stopchecker::GoalNotChange::new(
+            change_max_iterations,
+            change_delta,
+        )),
+        // Box::new(stopchecker::MaxIterations::new(20000)),
     ]);
 
     // Make a trait object for selection. Selection is killing the worst individuals.
@@ -107,10 +102,12 @@ fn main() {
     ];
 
     // Make a loggers trait objects
+    let mut stdout_verbose = io::stdout();
     let mut stdout_result = io::stdout();
     let mut stdout_time = io::stdout();
 
     let loggers: Vec<Box<dyn logging::Logger<Chromosomes>>> = vec![
+        Box::new(logging::VerboseLogger::new(&mut stdout_verbose, 15)),
         Box::new(logging::ResultOnlyLogger::new(&mut stdout_result, 15)),
         Box::new(logging::TimeLogger::new(&mut stdout_time)),
     ];
@@ -131,61 +128,3 @@ fn main() {
     // Run genetic algorithm
     optimizer.find_min();
 }
-
-```
-
-Build all crates:
-
-```
-cargo build --release --all
-```
-
-Run example:
-
-```
-cargo run --example genetic-schwefel --release
-```
-
-Work result:
-
-```
-Solution:
-  420.974975585937500
-  420.969146728515625
-  420.955078125000000
-  421.004760742187500
-  420.999511718750000
-  421.007263183593750
-  420.987487792968750
-  421.001800537109375
-  420.980499267578125
-  420.991180419921875
-  421.001068115234375
-  420.942718505859375
-  420.964080810546875
-  420.951721191406250
-  420.961029052734375
-
-
-Goal: 0.000488281250000
-Iterations count: 3000
-Time elapsed: 2352 ms
-```
-
-Also ew library contains other optimization examples:
-
-* genetic-paraboloid
-* genetic-rastrigin
-* genetic-rosenbrock
-* genetic-schwefel
-* genetic-schwefel-iterative
-* genetic-schwefel-statistics
-* particleswarm-paraboloid
-* particleswarm-rastrigin
-* particleswarm-rastrigin-statistics-inertia
-* particleswarm-rosenbrock
-* particleswarm-schwefel
-* particleswarm-schwefel-iterative
-* particleswarm-schwefel-statistics
-* particleswarm-schwefel-statistics-full
-* particleswarm-schwefel-statistics-inertia

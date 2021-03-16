@@ -43,8 +43,8 @@
 ### API
 
 1. The loggers can save content with Write trait.
-1. The Goal trait moved to optlib module.
-1. The test functions moved to optlib-testfunc crate.
+1. The Goal trait moved to ew module.
+1. The test functions moved to ew-testfunc crate.
 1. Add new integration tests with optimization.
 
 ### Particle swarm optimization

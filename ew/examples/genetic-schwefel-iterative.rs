@@ -1,17 +1,3 @@
-# ew
-
-[![Current Version](https://img.shields.io/crates/v/ew.svg)](https://crates.io/crates/ew)
-[![Documentation](https://docs.rs/ew/badge.svg)](https://docs.rs/ew)
-[![License](https://img.shields.io/crates/l/ew.svg)](https://crates.io/crates/ew)
-
-Optimization algorithms implemented in Rust
-
-For now ew provides genetic algorithm and partcile swarm algorithm.
-
-
-## Example of optimization
-
-```rust
 //! Example of optimizing the Schwefel function with genetic algorithm.
 //!
 //! y = f(x), where x = (x0, x1, ..., xi,... xn).
@@ -30,7 +16,7 @@ use std::io;
 use ew::genetic::{self, creation, cross, mutation, pairing, pre_birth, selection};
 use ew::tools::logging;
 use ew::tools::stopchecker;
-use ew::{GoalFromFunction, Optimizer};
+use ew::{GoalFromFunction, IterativeOptimizer, Optimizer};
 use ew_testfunc;
 
 /// Gene type
@@ -63,11 +49,6 @@ fn main() {
     let creator = creation::vec_float::RandomCreator::new(population_size, intervals.clone());
 
     // Make a trait object for the pairing.
-    // Pairing is algorithm of selection individuals for crossbreeding.
-
-    // Select random individuals from the population.
-    // let pairing = pairing::RandomPairing::new();
-
     // Tournament method.
     let families_count = population_size / 2;
     let rounds_count = 5;
@@ -91,12 +72,8 @@ fn main() {
     )];
 
     // Stop checker. Stop criterion for genetic algorithm.
-    // Stop algorithm if the value of goal function will become less of 1e-4 or
-    // after 3000 generations (iterations).
-    let stop_checker = stopchecker::CompositeAny::new(vec![
-        Box::new(stopchecker::Threshold::new(1e-4)),
-        Box::new(stopchecker::MaxIterations::new(3000)),
-    ]);
+    let stop_checker_1 = Box::new(stopchecker::MaxIterations::new(100));
+    let stop_checker_2 = Box::new(stopchecker::MaxIterations::new(500));
 
     // Make a trait object for selection. Selection is killing the worst individuals.
     // Kill all individuals if the value of goal function is NaN or Inf.
@@ -107,10 +84,12 @@ fn main() {
     ];
 
     // Make a loggers trait objects
+    // let mut stdout_verbose = io::stdout();
     let mut stdout_result = io::stdout();
     let mut stdout_time = io::stdout();
 
     let loggers: Vec<Box<dyn logging::Logger<Chromosomes>>> = vec![
+        // Box::new(logging::VerboseLogger::new(&mut stdout_verbose, 15)),
         Box::new(logging::ResultOnlyLogger::new(&mut stdout_result, 15)),
         Box::new(logging::TimeLogger::new(&mut stdout_time)),
     ];
@@ -118,7 +97,7 @@ fn main() {
     // Construct main optimizer struct
     let mut optimizer = genetic::GeneticOptimizer::new(
         Box::new(goal),
-        Box::new(stop_checker),
+        stop_checker_1,
         Box::new(creator),
         Box::new(pairing),
         Box::new(cross),
@@ -130,62 +109,7 @@ fn main() {
 
     // Run genetic algorithm
     optimizer.find_min();
+
+    optimizer.set_stop_checker(stop_checker_2);
+    optimizer.next_iterations();
 }
-
-```
-
-Build all crates:
-
-```
-cargo build --release --all
-```
-
-Run example:
-
-```
-cargo run --example genetic-schwefel --release
-```
-
-Work result:
-
-```
-Solution:
-  420.974975585937500
-  420.969146728515625
-  420.955078125000000
-  421.004760742187500
-  420.999511718750000
-  421.007263183593750
-  420.987487792968750
-  421.001800537109375
-  420.980499267578125
-  420.991180419921875
-  421.001068115234375
-  420.942718505859375
-  420.964080810546875
-  420.951721191406250
-  420.961029052734375
-
-
-Goal: 0.000488281250000
-Iterations count: 3000
-Time elapsed: 2352 ms
-```
-
-Also ew library contains other optimization examples:
-
-* genetic-paraboloid
-* genetic-rastrigin
-* genetic-rosenbrock
-* genetic-schwefel
-* genetic-schwefel-iterative
-* genetic-schwefel-statistics
-* particleswarm-paraboloid
-* particleswarm-rastrigin
-* particleswarm-rastrigin-statistics-inertia
-* particleswarm-rosenbrock
-* particleswarm-schwefel
-* particleswarm-schwefel-iterative
-* particleswarm-schwefel-statistics
-* particleswarm-schwefel-statistics-full
-* particleswarm-schwefel-statistics-inertia

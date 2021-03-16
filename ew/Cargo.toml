@@ -1,0 +1,23 @@
+[package]
+name = "ew"
+version = "0.4.0"
+authors = ["Eugene Ilin <jenyay.ilin@gmail.com>"]
+edition = "2018"
+keywords = ["genetic", "optimization", "math", "algorithms"]
+categories = ["algorithms", "science"]
+description = "EW - optimization algorithms realized in Rust"
+license = "MIT"
+readme = "../README.md"
+homepage = "https://github.com/yuulive/ew"
+repository = "https://github.com/yuulive/ew"
+
+[dependencies]
+num = "0.2.1"
+rand = "0.7.3"
+
+[dev-dependencies]
+ew-testfunc = { path = "../ew-testfunc", version = "0.1.0"}
+num_cpus = "1.12.0"
+
+[badges]
+maintenance = { status = "actively-developed" }

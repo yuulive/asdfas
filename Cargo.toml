@@ -1,5 +1,5 @@
 [workspace]
 members = [
-	"optlib",
-	"optlib-testfunc",
+	"ew",
+	"ew-testfunc",
 ]
